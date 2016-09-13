@@ -1,22 +1,18 @@
 #!/usr/bin/env ruby
 
 Dir.chdir(ARGV[0])
-matcher = /(\d*).(JPG|DNG)/
-Dir.foreach('.') do |file|
-  fileMatches = matcher.match(file)
-  unless fileMatches
-    puts "There was no match."
-    next
-  end
-  if fileMatches[2] === 'DNG'
-    jpgName = "#{fileMatches[1]}.JPG"
-    if File.exist?(jpgName) # if the JPG is there, delete the RAW(DNG)
-      File.delete(file)
-    else # there is no duplicate JPG, we need to make one
-      oldFilename = "#{Dir.pwd}/#{file}"
-      newFilename = "#{fileMatches[1]}.jpg"
-      convertCommand = `convert #{oldFilename} #{newFilename}`
-      File.delete(file)
-    end
+raw_extension = ARGV[1]
+filename_pattern = /(.*).#{raw_extension}/
+
+Dir.glob("*.#{raw_extension}") do |raw_file|
+  base_file_name = filename_pattern.match(raw_file)[1]
+  if File.exist?("#{base_file_name}.JPG") || File.exist?("#{base_file_name}.jpg")
+    File.delete(raw_file)
+  else
+    oldFilename = "#{Dir.pwd}/#{raw_file}"
+    newFilename = "#{base_file_name}.jpg"
+    convertCommand = `convert #{oldFilename} #{newFilename}`
+    File.delete(raw_file)
+    puts "#{raw_file} converted to jpg, RAW deleted."
   end
 end
